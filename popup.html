@@ -49,8 +49,23 @@
     }
     .analysis-section {
       margin: 15px 0;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #eee;
+      padding: 15px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .analysis-section h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .chart-wrapper {
+      height: 200px;
+      position: relative;
+      margin: 10px 0;
+    }
+    .chart-wrapper canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
     .tag-cloud {
       display: flex;
@@ -65,11 +80,108 @@
       border-radius: 12px;
       font-size: 12px;
     }
+    .history-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 10px 0;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .history-item:hover {
+      background: #f8f8f8;
+    }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .history-time {
+      color: #666;
+      font-size: 12px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: #f0f0f0;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background: #ff9999;
+      color: white;
+    }
+    .charts-container {
+      margin: 20px 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+    .chart-wrapper:nth-child(3) {
+      grid-column: 1 / -1;
+    }
+    @media (max-width: 768px) {
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    .analysis-report {
+      padding: 15px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .stats-container {
+      margin-bottom: 15px;
+    }
+    .stat-item {
+      margin: 5px 0;
+    }
+    .stat-highlight {
+      color: #ff2442;
+      font-weight: bold;
+    }
+    .top-authors {
+      margin: 10px 0;
+    }
+    .hot-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .keyword {
+      background: #ffe4e6;
+      color: #ff2442;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    #progressContainer {
+      width: 100%;
+      background-color: #f3f3f3;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
   </style>
-  <!-- 确保 XLSX 库先加载 -->
-  <script src="xlsx.full.min.js" defer></script>
-  <!-- 其他脚本在 XLSX 库之后加载 -->
-  <script src="popup.js" defer></script>
+  <!-- 先加载 Chart.js，移除 defer -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- 其他脚本保持不变 -->
+  <script src="xlsx.full.min.js"></script>
+  <script src="popup.js" type="module" defer></script>
   <script src="hot-reload.js" defer></script>
 </head>
 <body>
@@ -77,8 +189,8 @@
     <select id="noteCount">
       <option value="10">10篇</option>
       <option value="20">20篇</option>
-      <option value="50">50篇</option>
-      <option value="100" selected>100篇</option>
+      <option value="30">30篇</option>
+      <option value="50" selected>50篇</option>
     </select>
   </div>
   <button id="analyzeButton">开始分析</button>
@@ -86,5 +198,8 @@
     📊 导出数据表格
   </button>
   <div id="result"></div>
+  <div id="progressContainer" style="display: none;">
+    <div id="progressBar" style="width: 0%; height: 20px; background-color: #4CAF50; border-radius: 4px;"></div>
+  </div>
 </body>
 </html> 
