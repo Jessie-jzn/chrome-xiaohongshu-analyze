@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "小红书笔记分析助手",
+  "version": "1.0.0",
+  "description": "分析小红书笔记数据，提供点赞、互动等数据分析报告",
+  "permissions": ["activeTab", "scripting", "storage", "downloads"],
+  "host_permissions": ["*://*.xiaohongshu.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "32": "images/icon32.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "32": "images/icon32.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "author": "你的名字或组织名称",
+  "homepage_url": "你的网站或项目主页"
+}

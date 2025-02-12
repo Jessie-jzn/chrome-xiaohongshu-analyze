@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #ff9999;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ff8080;
+    }
+    #result {
+      margin-top: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .stats-container {
+      background: #f8f8f8;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    .stat-item {
+      margin: 8px 0;
+    }
+    .stat-highlight {
+      color: #ff2442;
+      font-weight: bold;
+    }
+    .analysis-section {
+      margin: 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0;
+    }
+    .tag {
+      background: #ffe4e6;
+      color: #ff2442;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+  </style>
+  <!-- 确保 XLSX 库先加载 -->
+  <script src="xlsx.full.min.js" defer></script>
+  <!-- 其他脚本在 XLSX 库之后加载 -->
+  <script src="popup.js" defer></script>
+  <script src="hot-reload.js" defer></script>
+</head>
+<body>
+  <div class="input-group">
+    <select id="noteCount">
+      <option value="10">10篇</option>
+      <option value="20">20篇</option>
+      <option value="50">50篇</option>
+      <option value="100" selected>100篇</option>
+    </select>
+  </div>
+  <button id="analyzeButton">开始分析</button>
+  <button id="exportButton" style="margin-top: 10px; background-color: #4CAF50;">
+    📊 导出数据表格
+  </button>
+  <div id="result"></div>
+</body>
+</html> 
