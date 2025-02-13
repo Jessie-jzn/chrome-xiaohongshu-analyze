@@ -176,11 +176,80 @@
       border-radius: 4px;
       margin-top: 10px;
     }
+    .notes-list {
+      margin-top: 10px;
+    }
+    .note-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      gap: 10px;
+    }
+    .note-index {
+      min-width: 24px;
+      height: 24px;
+      background-color: #ff9999;
+      color: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .note-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .note-title {
+      margin-bottom: 5px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .note-title a {
+      color: #333;
+      text-decoration: none;
+    }
+    .note-title a:hover {
+      color: #ff2442;
+    }
+    .video-tag {
+      background-color: #ff2442;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .note-info {
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      gap: 10px;
+    }
+    .note-author, .note-likes {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .note-cover {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      margin-right: 10px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .note-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   </style>
-  <!-- 先加载 Chart.js，移除 defer -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- 改用本地的 Chart.js -->
+  <script src="lib/chart.js"></script>
   <!-- 其他脚本保持不变 -->
-  <script src="xlsx.full.min.js"></script>
+  <script src="lib/xlsx.full.min.js"></script>
   <script src="popup.js" type="module" defer></script>
   <script src="hot-reload.js" defer></script>
 </head>
@@ -201,5 +270,7 @@
   <div id="progressContainer" style="display: none;">
     <div id="progressBar" style="width: 0%; height: 20px; background-color: #4CAF50; border-radius: 4px;"></div>
   </div>
+  <!-- 添加内容容器 -->
+  <div id="contentContainer"></div>
 </body>
 </html> 

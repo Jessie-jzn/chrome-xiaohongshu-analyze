@@ -32,7 +32,7 @@ async function loadInitialData() {
   try {
     const result = await chrome.storage.local.get("lastAnalysis");
     if (result.lastAnalysis) {
-      displayResults(result.lastAnalysis.data, false);
+      displayResults(result.lastAnalysis.data, true);
     } else {
       document.getElementById("contentContainer").innerHTML =
         "<p>暂无分析数据，请先进行分析。</p>";
@@ -46,14 +46,23 @@ async function loadInitialData() {
 async function handleAnalyzeClick() {
   const noteCount = parseInt(document.getElementById("noteCount").value);
   const resultDiv = document.getElementById("result");
+  const progressContainer = document.getElementById("progressContainer");
+  const progressBar = document.getElementById("progressBar");
+  const contentContainer = document.getElementById("contentContainer");
 
-  // 显示加载提示
+  // 清空之前的内容
+  contentContainer.innerHTML = "";
+
+  // 显示加载提示和进度条
   resultDiv.innerHTML = `
-      <div style="text-align: center; padding: 20px;">
-        <p>正在加载数据，请稍候...</p>
-        <p>需要分析 ${noteCount} 篇笔记，可能需要一些时间</p>
-      </div>
-    `;
+    <div style="text-align: center; padding: 20px;">
+      <p>正在加载数据，请稍候...</p>
+      <p>需要分析 ${noteCount} 篇笔记，可能需要一些时间</p>
+      <p id="progressText">进度：0%</p>
+    </div>
+  `;
+  progressContainer.style.display = "block";
+  progressBar.style.width = "0%";
 
   try {
     // 获取当前标签页
@@ -73,6 +82,7 @@ async function handleAnalyzeClick() {
               (resolveElements, rejectElements) => {
                 const startTime = Date.now();
                 const checkElements = () => {
+                  // 更新选择器以匹配小红书的实际结构
                   const elements =
                     document.querySelectorAll("section.note-item");
                   if (elements.length > 0) {
@@ -93,6 +103,15 @@ async function handleAnalyzeClick() {
             const maxScrollAttempts = 50;
             let scrollAttempts = 0;
 
+            // 修改发送进度更新的方法
+            const sendProgress = (progress) => {
+              // 使用 chrome.runtime.sendMessage 替代 postMessage
+              chrome.runtime.sendMessage({
+                type: "UPDATE_PROGRESS",
+                progress: progress,
+              });
+            };
+
             while (
               notes.size < targetCount &&
               scrollAttempts < maxScrollAttempts
@@ -107,11 +126,11 @@ async function handleAnalyzeClick() {
                       const noteData = {
                         title:
                           element
-                            .querySelector("a.title")
+                            .querySelector("span[data-v-0cdd7be0]")
                             ?.textContent?.trim() || "",
                         author:
                           element
-                            .querySelector("a.author")
+                            .querySelector(".author .name")
                             ?.textContent?.trim() || "",
                         likes:
                           element
@@ -119,14 +138,17 @@ async function handleAnalyzeClick() {
                             ?.textContent?.trim() || "0",
                         isVideo:
                           element.querySelector(".video-container") !== null,
-                        timestamp:
-                          element.querySelector("time")?.dateTime ||
-                          new Date().toISOString(),
-                        link: element.querySelector("a.title")?.href || "",
+                        timestamp: new Date().toISOString(),
+                        link: element.querySelector("a.cover")?.href || "",
+                        cover:
+                          element
+                            .querySelector("img[data-xhs-img]")
+                            ?.getAttribute("src") || "",
                       };
 
                       if (noteData.title && noteData.author) {
                         notes.add(JSON.stringify(noteData));
+                        console.log("找到笔记:", noteData);
                       }
                     } catch (error) {
                       console.error("提取笔记数据失败:", error);
@@ -134,6 +156,14 @@ async function handleAnalyzeClick() {
                     element.dataset.processed = "true";
                   }
                 });
+
+                // 更新进度
+                const progress = Math.min(
+                  Math.round((notes.size / targetCount) * 100),
+                  100
+                );
+                sendProgress(progress);
+                console.log("当前进度:", progress, "%");
 
                 if (notes.size >= targetCount) {
                   break;
@@ -144,6 +174,8 @@ async function handleAnalyzeClick() {
                   top: currentHeight,
                   behavior: "smooth",
                 });
+
+                console.log("滚动到:", currentHeight);
 
                 await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -175,12 +207,11 @@ async function handleAnalyzeClick() {
                 isVideo: note.isVideo,
                 timestamp: note.timestamp,
                 link: note.link,
+                cover: note.cover,
               }))
               .sort((a, b) => b.likesNum - a.likesNum);
 
-            // 调试输出
-            console.log("处理后的数据:", processedNotes);
-
+            console.log("处理完成，共找到笔记:", processedNotes.length);
             resolve(processedNotes);
           } catch (error) {
             console.error("分析失败:", error);
@@ -191,24 +222,38 @@ async function handleAnalyzeClick() {
       args: [noteCount],
     });
 
+    // 监听来自内容脚本的消息
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === "UPDATE_PROGRESS") {
+        const progress = message.progress;
+        progressBar.style.width = `${progress}%`;
+        document.getElementById(
+          "progressText"
+        ).textContent = `进度：${progress}%`;
+      }
+    });
+
     // 处理结果
     if (result && result[0]?.result) {
       const data = result[0].result;
-      displayResults(data);
+      // 清空加载提示
+      resultDiv.innerHTML = "";
+      // 显示分析结果，传入 true 以显示标签页
+      displayResults(data, true);
       await saveAnalysisResult(data);
-
-      // 输出处理后的数据
-      console.log("处理后的数据（按点赞排序）:", data);
     } else {
       throw new Error("未能获取数据");
     }
   } catch (error) {
     resultDiv.innerHTML = `
-        <div style="color: red; padding: 20px;">
-          <p>数据加载失败：${error.message}</p>
-          <p>请确保在小红书页面使用此功能</p>
-        </div>
-      `;
+      <div style="color: red; padding: 20px;">
+        <p>数据加载失败：${error.message}</p>
+        <p>请确保在小红书页面使用此功能</p>
+      </div>
+    `;
+  } finally {
+    // 隐藏进度条
+    progressContainer.style.display = "none";
   }
 }
 

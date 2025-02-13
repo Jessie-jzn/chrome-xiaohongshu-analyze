@@ -1,10 +1,22 @@
+import { analyzeData } from "./analyzer.js";
+
 // 存储相关功能
 export async function saveAnalysisResult(data) {
   try {
-    const newRecord = createAnalysisRecord(data);
-    await saveToStorage(newRecord);
+    const record = createAnalysisRecord(data);
+    const history = await loadHistory();
+    history.unshift(record);
+
+    // 只保留最近的10条记录
+    const recentHistory = history.slice(0, 10);
+
+    await chrome.storage.local.set({
+      lastAnalysis: record,
+      analysisHistory: recentHistory,
+    });
   } catch (error) {
     console.error("保存分析结果失败:", error);
+    throw error;
   }
 }
 
@@ -25,32 +37,6 @@ function createAnalysisRecord(data) {
     data: data,
     analysis: analyzeData(data),
   };
-}
-
-async function saveToStorage(record) {
-  try {
-    // 获取现有历史记录
-    const { analysisHistory = [] } = await chrome.storage.local.get(
-      "analysisHistory"
-    );
-
-    // 添加新记录到开头
-    analysisHistory.unshift(record);
-
-    // 保留最近的10条记录
-    const updatedHistory = analysisHistory.slice(0, 10);
-
-    // 保存更新后的历史记录
-    await chrome.storage.local.set({ analysisHistory: updatedHistory });
-
-    // 保存最后一次分析结果
-    await chrome.storage.local.set({
-      lastAnalysis: { timestamp: record.timestamp, data: record.data },
-    });
-  } catch (error) {
-    console.error("保存到存储失败:", error);
-    throw error;
-  }
 }
 
 function generateId() {

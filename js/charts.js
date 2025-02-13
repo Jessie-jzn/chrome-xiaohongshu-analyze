@@ -14,7 +14,7 @@ export function generateCharts(data, analysis) {
     const chartTrends = Chart.getChart("trendsChart");
     if (chartTrends) chartTrends.destroy();
 
-    createLikesChart(analysis);
+    createLikesChart(data);
     createTypeChart(analysis);
     createTrendsChart(data);
   } catch (error) {
@@ -22,15 +22,43 @@ export function generateCharts(data, analysis) {
   }
 }
 
-function createLikesChart(analysis) {
-  new Chart(document.getElementById("likesChart"), {
+function createLikesChart(data) {
+  // 统计不同点赞范围的数量
+  const likesRanges = {
+    "1000以下": 0,
+    "1000-5000": 0,
+    "5000-1万": 0,
+    "1万-5万": 0,
+    "5万-10万": 0,
+    "10万以上": 0,
+  };
+
+  data.forEach((note) => {
+    const likes = note.likesNum;
+    if (likes < 1000) {
+      likesRanges["1000以下"]++;
+    } else if (likes < 5000) {
+      likesRanges["1000-5000"]++;
+    } else if (likes < 10000) {
+      likesRanges["5000-1万"]++;
+    } else if (likes < 50000) {
+      likesRanges["1万-5万"]++;
+    } else if (likes < 100000) {
+      likesRanges["5万-10万"]++;
+    } else {
+      likesRanges["10万以上"]++;
+    }
+  });
+
+  const ctx = document.getElementById("likesChart").getContext("2d");
+  new Chart(ctx, {
     type: "bar",
     data: {
-      labels: Object.keys(analysis.likesDistribution),
+      labels: Object.keys(likesRanges),
       datasets: [
         {
           label: "笔记数量",
-          data: Object.values(analysis.likesDistribution),
+          data: Object.values(likesRanges),
           backgroundColor: "rgba(255, 99, 132, 0.5)",
           borderColor: "rgba(255, 99, 132, 1)",
           borderWidth: 1,
@@ -39,14 +67,12 @@ function createLikesChart(analysis) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: "点赞数量分布",
-        },
-        legend: {
-          display: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+          },
         },
       },
     },

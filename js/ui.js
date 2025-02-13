@@ -23,11 +23,107 @@ export function displayResults(data, createTabs = true) {
   const contentDiv = document.getElementById("contentContainer");
   if (!contentDiv) return;
 
-  // 显示概览标签内容
-  showOverviewTab(analysis);
+  // 如果需要创建标签页
+  if (createTabs) {
+    const tabsHtml = `
+      <div class="tabs">
+        <button class="tab-button active" data-tab="overview">📊 概览</button>
+        <button class="tab-button" data-tab="charts">📈 图表</button>
+        <button class="tab-button" data-tab="history">📋 历史</button>
+      </div>
+    `;
+    contentDiv.innerHTML = tabsHtml;
+    addTabEventListeners();
+    showOverviewTab(data, analysis);
+    return;
+  }
+
+  // 如果不需要创建标签页，直接显示笔记列表
+  const html = `
+    <div class="analysis-report">
+      <h3>数据分析报告</h3>
+      
+      <div class="stats-container">
+        <div class="stat-item">📊 共分析 <span class="stat-highlight">${
+          analysis.stats.totalNotes
+        }</span> 篇笔记</div>
+        <div class="stat-item">❤️ 总点赞数 <span class="stat-highlight">${(
+          analysis.stats.totalLikes / 10000
+        ).toFixed(1)}</span> 万</div>
+        <div class="stat-item">📈 平均点赞 <span class="stat-highlight">${(
+          analysis.stats.avgLikes / 10000
+        ).toFixed(1)}</span> 万</div>
+        <div class="stat-item">📹 视频笔记 <span class="stat-highlight">${
+          analysis.stats.videoCount
+        }</span> 篇 (${Math.round(
+    (analysis.stats.videoCount / analysis.stats.totalNotes) * 100
+  )}%)</div>
+      </div>
+
+      <h4>🏆 活跃创作者</h4>
+      <div class="top-authors">
+        ${analysis.topAuthors
+          .map(
+            (author, index) => `
+          <div class="author-item">
+            Top${index + 1}: ${author.author} (${author.noteCount}篇笔记)
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+
+      <h4>🔍 热门关键词</h4>
+      <div class="hot-keywords">
+        ${analysis.topKeywords
+          .map(
+            (keyword) => `
+          <span class="keyword">${keyword.keyword} (${keyword.count})</span>
+        `
+          )
+          .join("")}
+      </div>
+
+      <h4>📝 笔记列表</h4>
+      <div class="notes-list">
+        ${data
+          .map(
+            (note, index) => `
+          <div class="note-item">
+            <div class="note-cover">
+              <img src="${note.cover || "images/placeholder.png"}" alt="${
+              note.title
+            }" onerror="this.src='images/placeholder.png'">
+            </div>
+            <div class="note-content">
+              <div class="note-title">
+                <a href="${note.link}" target="_blank">${note.title}</a>
+                ${note.isVideo ? '<span class="video-tag">视频</span>' : ""}
+              </div>
+              <div class="note-info">
+                <span class="note-author">👤 ${note.author}</span>
+              </div>
+              <div class="note-likes">
+                <span class="note-likes">❤️ ${
+                  note.likesNum > 10000
+                    ? `${(note.likesNum / 10000).toFixed(1)}万`
+                    : note.likesNum
+                }</span>
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  contentDiv.innerHTML = html;
 }
 
-function showOverviewTab(analysis) {
+// 显示概览标签内容
+function showOverviewTab(data, analysis) {
   const contentDiv = document.getElementById("contentContainer");
   const html = `
     <div class="analysis-section">
@@ -83,9 +179,55 @@ function showOverviewTab(analysis) {
           .join("")}
       </div>
     </div>
+
+    <div class="analysis-section">
+      <h4>📝 笔记列表</h4>
+      <div class="notes-list">
+        ${data
+          .map(
+            (note, index) => `
+          <div class="note-item">
+            <div class="note-cover">
+              <img src="${note.cover || "images/placeholder.png"}" alt="${
+              note.title
+            }" onerror="this.src='images/placeholder.png'">
+            </div>
+            <div class="note-content">
+              <div class="note-title">
+                <a href="${note.link}" target="_blank">${note.title}</a>
+                ${note.isVideo ? '<span class="video-tag">视频</span>' : ""}
+              </div>
+              <div class="note-info">
+                <span class="note-author">👤 ${note.author}</span>
+              </div>
+              <div class="note-likes">
+                <span class="note-likes">❤️ ${
+                  note.likesNum > 10000
+                    ? `${(note.likesNum / 10000).toFixed(1)}万`
+                    : note.likesNum
+                }</span>
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    </div>
   `;
 
   contentDiv.innerHTML = html;
+
+  // 等待 DOM 更新后生成图表
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      try {
+        generateCharts(data, analysis);
+      } catch (error) {
+        console.error("显示图表时出错:", error);
+      }
+    }, 100);
+  });
 }
 
 function showChartsTab(data, analysis) {
@@ -147,7 +289,7 @@ function addTabEventListeners() {
       const tabName = button.dataset.tab;
       if (tabName === "overview") {
         if (analysis) {
-          showOverviewTab(analysis);
+          showOverviewTab(data, analysis);
         } else {
           contentDiv.innerHTML = "<p>暂无分析数据，请先进行分析。</p>";
         }
@@ -212,9 +354,9 @@ function addHistoryEventListeners() {
       const record = history.find((r) => r.id === recordId);
 
       if (record) {
-        displayResults(record.data, false);
-        // 切换到分析标签
-        document.querySelector('[data-tab="analysis"]').click();
+        displayResults(record.data, true);
+        // 切换到概览标签
+        document.querySelector('[data-tab="overview"]').click();
       }
     });
   });

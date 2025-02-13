@@ -23,6 +23,9 @@
     "48": "images/icon48.png",
     "128": "images/icon128.png"
   },
-  "author": "你的名字或组织名称",
-  "homepage_url": "你的网站或项目主页"
+  "author": "Jessie",
+  "homepage_url": "https://www.jessieontheroad.com/",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
