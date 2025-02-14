@@ -1,12 +1,13 @@
 import React from "react";
 
-export const StatsCard = ({ totalNotes, avgLikes, videoCount, imageCount }) => (
-  <div className="bg-white rounded-lg shadow p-4 mb-4">
-    <div className="grid grid-cols-2 gap-4">
-      <StatItem label="笔记总数" value={totalNotes} />
-      <StatItem label="平均点赞" value={`${(avgLikes / 10000).toFixed(1)}万`} />
-      <StatItem label="视频数量" value={videoCount} />
-      <StatItem label="图文数量" value={imageCount} />
+export const StatsCard = ({ title, value, icon }) => (
+  <div className="bg-white rounded-lg shadow p-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-lg font-bold">{value}</h3>
+        <p className="text-gray-500">{title}</p>
+      </div>
+      <div className="text-2xl">{icon}</div>
     </div>
   </div>
 );

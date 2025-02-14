@@ -1,47 +1,51 @@
 import React from "react";
-import { AnalysisCard } from "./AnalysisCard";
 import { StatsCard } from "./StatsCard";
 import { KeywordCloud } from "./KeywordCloud";
+import { AnalysisCard } from "./AnalysisCard";
 
 export const OverviewTab = ({ data }) => {
-  const { stats, titleAnalysis, keywordAnalysis, influencerAnalysis } = data;
+  const { stats, keywordAnalysis, titleAnalysis } = data;
 
   return (
-    <div>
-      <StatsCard
-        totalNotes={stats.totalNotes}
-        avgLikes={stats.avgLikes}
-        videoCount={stats.videoCount}
-        imageCount={stats.imageCount}
-      />
-
-      <AnalysisCard
-        title="🔍 标题分析"
-        data={{
-          avgLength: titleAnalysis.avgLength,
-          hasNumber: titleAnalysis.patterns.hasNumber,
-          hasEmoji: titleAnalysis.patterns.hasEmoji,
-        }}
-        type="titleAnalysis"
-      />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <StatsCard title="笔记总数" value={stats.totalNotes} icon="📝" />
+        <StatsCard
+          title="平均点赞"
+          value={Math.round(stats.avgLikes)}
+          icon="❤️"
+        />
+        <StatsCard
+          title="视频占比"
+          value={`${Math.round((stats.videoCount / stats.totalNotes) * 100)}%`}
+          icon="🎥"
+        />
+        <StatsCard
+          title="图文占比"
+          value={`${Math.round((stats.imageCount / stats.totalNotes) * 100)}%`}
+          icon="🖼️"
+        />
+      </div>
 
       <KeywordCloud keywords={keywordAnalysis.keywords} />
 
-      {influencerAnalysis && (
-        <div className="mt-4">
-          <h4 className="text-lg font-bold mb-2">🎯 博主定位分析</h4>
-          <AnalysisCard
-            title="内容输出"
-            data={influencerAnalysis.contentOutput}
-            type="contentOutput"
-          />
-          <AnalysisCard
-            title="变现路径"
-            data={influencerAnalysis.monetization}
-            type="monetization"
-          />
-        </div>
-      )}
+      <AnalysisCard
+        title="标题分析"
+        items={[
+          {
+            label: "平均长度",
+            value: `${Math.round(titleAnalysis.avgLength)}字`,
+          },
+          {
+            label: "数字使用率",
+            value: `${Math.round(titleAnalysis.patterns.hasNumber)}%`,
+          },
+          {
+            label: "表情使用率",
+            value: `${Math.round(titleAnalysis.patterns.hasEmoji)}%`,
+          },
+        ]}
+      />
     </div>
   );
 };

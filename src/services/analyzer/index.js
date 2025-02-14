@@ -19,6 +19,17 @@ export const analyzeData = (data) => {
 };
 
 function calculateStats(data) {
+  // 确保 data 是数组
+  if (!Array.isArray(data)) {
+    console.error("Invalid data format:", data);
+    return {
+      totalNotes: 0,
+      avgLikes: 0,
+      videoCount: 0,
+      imageCount: 0,
+    };
+  }
+
   const totalNotes = data.length;
   const totalLikes = data.reduce((sum, note) => sum + note.likes, 0);
   const avgLikes = totalLikes / totalNotes;

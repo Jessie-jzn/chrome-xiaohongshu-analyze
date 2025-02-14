@@ -1,27 +1,79 @@
-// 注入到页面的脚本
 console.log("Content script loaded");
 
 // 提取页面数据
 function extractData() {
-  // ...
+  try {
+    // 等待页面加载完成
+    if (document.readyState !== "complete") {
+      return null;
+    }
+
+    // 使用小红书的实际选择器
+    const posts = Array.from(
+      document.querySelectorAll("section.note-item")
+    ).map((post) => {
+      // 标题
+      const titleEl = post.querySelector(".title span");
+      // 点赞数
+      const likesEl = post.querySelector(".like-wrapper .count");
+      // 作者
+      const authorEl = post.querySelector(".author .name");
+      // 封面图
+      const coverEl = post.querySelector(".cover img");
+      // 链接
+      const linkEl = post.querySelector("a[href^='/explore/']");
+      // 是否视频（通过图片尺寸判断）
+      const imageStyle = coverEl?.getAttribute("style") || "";
+      const isVideo = imageStyle.includes("object-fit: contain");
+
+      return {
+        title: titleEl?.textContent?.trim() || "",
+        likes: parseInt(
+          likesEl?.textContent?.replace(/[^0-9]/g, "") || "0",
+          10
+        ),
+        isVideo,
+        author: authorEl?.textContent?.trim() || "",
+        cover: coverEl?.src || "",
+        link: linkEl?.href || "",
+        noteId: linkEl?.href?.split("/")?.pop() || "",
+      };
+    });
+
+    console.log("Extracted posts:", posts.length);
+    return posts;
+  } catch (err) {
+    console.error("Data extraction failed:", err);
+    return null;
+  }
 }
 
 // 监听消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("Received message:", request);
+
   if (request.action === "extract") {
-    const data = extractData();
-    sendResponse({ data });
+    // 如果页面还没加载完，等待后重试
+    if (document.readyState !== "complete") {
+      setTimeout(() => {
+        const data = extractData();
+        if (data) {
+          sendResponse({ data: data.slice(0, request.count || 50) });
+        } else {
+          sendResponse({ error: "页面数据未准备好" });
+        }
+      }, 1000);
+    } else {
+      const data = extractData();
+      if (data) {
+        sendResponse({ data: data.slice(0, request.count || 50) });
+      } else {
+        sendResponse({ error: "无法获取数据" });
+      }
+    }
+    return true; // 保持消息通道开放
   }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("小红书数据分析插件启动");
-
-  // 获取帖子数据
-  let posts = document.querySelectorAll(".note-item");
-  posts.forEach((post) => {
-    let title = post.querySelector(".note-title").innerText;
-    let likes = post.querySelector(".note-likes").innerText;
-    console.log(`标题: ${title}, 点赞数: ${likes}`);
-  });
-});
+// 初始化
+console.log("Content script initialized, readyState:", document.readyState);

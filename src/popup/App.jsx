@@ -4,6 +4,9 @@ import { DataTable } from "./components/DataTable";
 import { ProgressBar } from "./components/ProgressBar";
 import { useAnalysis } from "./hooks/useAnalysis";
 import { exportToExcel } from "../utils/export";
+import { OverviewTab } from "./components/OverviewTab";
+import { ChartsTab } from "./components/ChartsTab";
+import { HistoryTab } from "./components/HistoryTab";
 
 function App() {
   const [noteCount, setNoteCount] = useState(50);
@@ -15,6 +18,7 @@ function App() {
       await analyze(noteCount);
     } catch (err) {
       console.error("Analysis failed:", err);
+      setError(err.message || "分析失败，请确保在小红书页面使用此插件");
     }
   };
 
@@ -58,9 +62,7 @@ function App() {
       {loading && <ProgressBar />}
 
       {error && (
-        <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">
-          {error.message}
-        </div>
+        <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">{error}</div>
       )}
 
       {data && (
