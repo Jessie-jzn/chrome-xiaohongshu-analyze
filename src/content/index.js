@@ -9,13 +9,18 @@ function extractData() {
     }
 
     // 使用小红书的实际选择器
-    const posts = Array.from(
-      document.querySelectorAll("section.note-item")
-    ).map((post) => {
+    const elements = document.querySelectorAll("section.note-item");
+    console.log("Found elements:", elements.length);
+
+    const posts = Array.from(elements).map((post) => {
       // 标题
       const titleEl = post.querySelector(".title span");
+      console.log("Title element:", titleEl);
+
       // 点赞数
       const likesEl = post.querySelector(".like-wrapper .count");
+      console.log("Likes element:", likesEl);
+
       // 作者
       const authorEl = post.querySelector(".author .name");
       // 封面图
@@ -40,7 +45,7 @@ function extractData() {
       };
     });
 
-    console.log("Extracted posts:", posts.length);
+    console.log("Extracted posts:", posts);
     return posts;
   } catch (err) {
     console.error("Data extraction failed:", err);
@@ -57,6 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (document.readyState !== "complete") {
       setTimeout(() => {
         const data = extractData();
+        console.log("Extracted data:", data);
         if (data) {
           sendResponse({ data: data.slice(0, request.count || 50) });
         } else {
@@ -65,6 +71,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }, 1000);
     } else {
       const data = extractData();
+      console.log("Extracted data:", data);
       if (data) {
         sendResponse({ data: data.slice(0, request.count || 50) });
       } else {

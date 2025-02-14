@@ -40,7 +40,13 @@ export function useAnalysis() {
         }
 
         if (!Array.isArray(response?.data)) {
-          throw new Error("数据格式错误");
+          throw new Error(
+            "未能获取笔记数据，请确保在小红书笔记列表页面使用此插件"
+          );
+        }
+
+        if (response.data.length === 0) {
+          throw new Error("未找到任何笔记数据，请确保页面已完全加载");
         }
 
         const analysisResult = analyzeData(response.data);
