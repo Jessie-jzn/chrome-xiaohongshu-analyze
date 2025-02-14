@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "小红书笔记AI分析工具",
+  "version": "1.0.0",
+  "description": "分析小红书笔记数据的Chrome扩展",
+  "permissions": ["storage", "activeTab", "management"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/images/icon16.png",
+      "48": "assets/images/icon48.png",
+      "128": "assets/images/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["hot-reload.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.xiaohongshu.com/*"],
+      "js": ["content.bundle.js"]
+    }
+  ]
+}

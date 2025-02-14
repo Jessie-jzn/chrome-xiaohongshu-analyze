@@ -3,6 +3,7 @@ import { analyzeData } from "./js/analyzer.js";
 import { exportToExcel } from "./js/exporter.js";
 import { addTabs, displayResults } from "./js/ui.js";
 import { saveAnalysisResult, loadHistory } from "./js/storage.js";
+import { fetchWithRetry } from "./js/utils.js";
 
 // 主要事件监听和初始化
 document.addEventListener("DOMContentLoaded", async () => {
@@ -132,12 +133,13 @@ async function handleAnalyzeClick() {
                           element
                             .querySelector(".author .name")
                             ?.textContent?.trim() || "",
+                        authorLink:
+                          element.querySelector(".author")?.href || "",
                         likes:
                           element
                             .querySelector(".like-wrapper .count")
                             ?.textContent?.trim() || "0",
-                        isVideo:
-                          element.querySelector(".video-container") !== null,
+                        isVideo: element.querySelector(".play-icon") !== null,
                         timestamp: new Date().toISOString(),
                         link: element.querySelector("a.cover")?.href || "",
                         cover:
@@ -294,4 +296,48 @@ function setupAnalyzeButton() {
   analyzeButton.addEventListener("mouseleave", () => {
     analyzeButton.style.backgroundColor = "#ff9999";
   });
+}
+
+async function fetchAuthorNotes(userId, cursor = "", notes = []) {
+  try {
+    const data = await fetchWithRetry(
+      `https://edith.xiaohongshu.com/api/sns/web/v1/user_posted?num=30&cursor=${cursor}&user_id=${userId}`,
+      {
+        credentials: "include",
+      }
+    );
+
+    if (data.success && data.data) {
+      const newNotes = [...notes, ...data.data.notes];
+
+      // 如果还有更多数据并且数量未达到目标，继续获取
+      if (data.data.has_more && newNotes.length < 100) {
+        // 添加随机延迟后再请求下一页
+        await new Promise((resolve) => setTimeout(resolve, getRandomDelay()));
+        return fetchAuthorNotes(userId, data.data.cursor, newNotes);
+      }
+
+      return newNotes;
+    }
+    throw new Error("获取数据失败");
+  } catch (error) {
+    console.error("API请求失败:", error);
+    throw error;
+  }
+}
+
+// 处理API数据
+function processApiNotes(notes) {
+  return notes.map((note) => ({
+    title: note.display_title,
+    author: note.user.nickname,
+    authorId: note.user.user_id,
+    authorAvatar: note.user.avatar,
+    likesNum: parseInt(note.interact_info.liked_count),
+    isVideo: note.type === "video",
+    timestamp: new Date().toISOString(), // API中可能需要另外获取时间
+    link: `https://www.xiaohongshu.com/explore/${note.note_id}`,
+    cover: note.cover.url_default,
+    noteId: note.note_id,
+  }));
 }

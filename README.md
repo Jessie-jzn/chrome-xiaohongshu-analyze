@@ -1,65 +1,104 @@
-# 小红书笔记分析助手
+# 小红书笔记分析工具
 
-一个帮助分析小红书笔记数据的 Chrome 扩展。
+一个帮助分析小红书笔记数据的 Chrome 扩展，提供数据分析、内容优化和趋势预测功能。
 
 ## 功能特点
 
-- 批量分析笔记数据（支持 10-100 篇）
-- 统计点赞、互动等核心指标
-- 数据可视化展示
-  - 点赞分布图表
-  - 内容类型占比
-  - 时间趋势分析
-- 分析标题特征和关键词
-- 导出详细 Excel 报告
-- 保存历史分析记录
+- 📊 数据分析
 
-## 安装使用
+  - 笔记数据统计
+  - 互动数据分析
+  - 内容类型分布
+  - 发布时间分析
 
-1. 下载项目代码
-2. 打开 Chrome 扩展管理页面 (`chrome://extensions/`)
-3. 开启"开发者模式"
-4. 点击"加载已解压的扩展程序"
-5. 选择项目文件夹
+- 🎯 内容优化
 
-## 使用方法
+  - 标题分析
+  - 关键词提取
+  - 爆文预测
+  - 优化建议
 
-1. 打开小红书搜索或个人主页
-2. 点击扩展图标
-3. 选择要分析的笔记数量
-4. 点击"开始分析"
-5. 查看分析报告或导出数据
+- 📈 博主定位
+  - 内容输出分析
+  - 受众画像
+  - 变现路径
+  - 发展策略
+
+## 技术栈
+
+- ⚛️ React 18
+- 🎨 Tailwind CSS
+- 📦 Webpack 5
+- 🔄 Chrome Extension API
+- 📊 Chart.js
+
+## 开发指南
+
+### 环境要求
+
+- Node.js >= 14
+- npm >= 6
+
+### 安装依赖
+
+```bash
+npm install
+```
+
+### 开发模式
+
+```bash
+npm run dev
+```
+
+### 生产构建
+
+```bash
+npm run build
+```
+
+### 安装到 Chrome
+
+1. 打开 Chrome 扩展管理页面 (chrome://extensions/)
+2. 开启"开发者模式"
+3. 点击"加载已解压的扩展程序"
+4. 选择项目的 `dist` 目录
 
 ## 项目结构
 
 ```
-├── manifest.json // 扩展配置文件
-├── popup.html // 弹窗界面
-├── popup.js // 弹窗逻辑
-├── background.js // 后台脚本
-├── xlsx.full.min.js // Excel导出库
-└── images/ // 图标资源
-├── icon16.png
-├── icon32.png
-├── icon48.png
-└── icon128.png
+src/
+├── manifest.json           # 插件配置
+├── background/            # 后台服务
+├── content/              # 内容脚本
+├── popup/               # 弹窗界面
+│   ├── components/    # UI组件
+│   └── hooks/        # React Hooks
+├── services/         # 核心服务
+├── styles/          # 样式文件
+└── utils/          # 工具函数
 ```
 
-## 开发说明
+## 开发流程
 
-本扩展使用原生 JavaScript 开发，主要依赖：
+1. 修改代码，保存文件
+2. Webpack 自动重新构建
+3. 扩展自动重新加载（热重载）
+4. 在小红书网页测试功能
 
-- Chrome Extension API
-- SheetJS (xlsx) 用于 Excel 导出
+## 调试技巧
 
-## License
-
-MIT License
+- 使用 Chrome DevTools 的 Console 面板
+- 使用 React DevTools 调试组件
+- 使用 Network 面板监控请求
 
 ## 贡献指南
 
 1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
+2. 创建特性分支
+3. 提交改动
+4. 发起 Pull Request
+
+## 许可证
+
+MIT License
