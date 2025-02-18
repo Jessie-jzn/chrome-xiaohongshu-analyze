@@ -1,13 +1,27 @@
 import * as XLSX from "xlsx";
 
 export const exportToExcel = (data) => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "分析数据");
+  // 创建CSV内容
+  const csvContent = [
+    ["标题", "点赞数", "类型", "作者", "链接"],
+    ...data.map((item) => [
+      item.title,
+      item.likes,
+      item.isVideo ? "视频" : "图文",
+      item.author,
+      item.link,
+    ]),
+  ]
+    .map((row) => row.join(","))
+    .join("\n");
 
-  // 生成文件名
-  const fileName = `小红书分析_${new Date().toLocaleDateString()}.xlsx`;
+  // 创建Blob对象
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
 
-  // 导出文件
-  XLSX.writeFile(workbook, fileName);
+  // 创建下载链接
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `小红书数据_${new Date().toLocaleDateString()}.csv`;
+  link.click();
 };

@@ -7,12 +7,13 @@ module.exports = {
     process.env.NODE_ENV === "production" ? "source-map" : "inline-source-map",
   entry: {
     popup: "./src/popup/index.jsx",
-    background: "./src/background/worker.js",
     content: "./src/content/index.js",
+    background: "./src/background/worker.js",
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "[name].bundle.js",
+    filename: "[name].js",
+    clean: true,
   },
   module: {
     rules: [
@@ -21,9 +22,6 @@ module.exports = {
         exclude: /node_modules/,
         use: {
           loader: "babel-loader",
-          options: {
-            presets: ["@babel/preset-react"],
-          },
         },
       },
       {
@@ -41,10 +39,10 @@ module.exports = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: "src/utils/hot-reload.js", to: "hot-reload.js" },
-        { from: "src/manifest.json", to: "manifest.json" },
-        { from: "src/popup/popup.html", to: "popup.html" },
-        { from: "src/assets/images", to: "assets/images" },
+        { from: "src/manifest.json" },
+        { from: "src/popup/popup.html" },
+        { from: "src/assets/images", to: "images", noErrorOnMissing: true },
+        { from: "src/lib", to: "lib", noErrorOnMissing: true },
       ],
     }),
   ],

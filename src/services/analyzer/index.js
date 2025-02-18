@@ -19,9 +19,7 @@ export const analyzeData = (data) => {
 };
 
 function calculateStats(data) {
-  // 确保 data 是数组
   if (!Array.isArray(data)) {
-    console.error("Invalid data format:", data);
     return {
       totalNotes: 0,
       avgLikes: 0,
@@ -49,18 +47,16 @@ function analyzeTitles(data) {
   const totalLength = titles.reduce((sum, title) => sum + title.length, 0);
   const avgLength = totalLength / titles.length;
 
-  const patterns = {
-    hasNumber:
-      (titles.filter((title) => /\d+/.test(title)).length / titles.length) *
-      100,
-    hasEmoji:
-      (titles.filter((title) => /[\u{1F300}-\u{1F9FF}]/u.test(title)).length /
-        titles.length) *
-      100,
-  };
-
   return {
     avgLength,
-    patterns,
+    patterns: {
+      hasNumber:
+        (titles.filter((title) => /\d+/.test(title)).length / titles.length) *
+        100,
+      hasEmoji:
+        (titles.filter((title) => /[\u{1F300}-\u{1F9FF}]/u.test(title)).length /
+          titles.length) *
+        100,
+    },
   };
 }

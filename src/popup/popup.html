@@ -3,12 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <title>小红书笔记分析工具</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #ff2442;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
-  <!-- 确保这个 div 存在且 id 正确 -->
   <div id="root"></div>
-  <!-- 移除其他内联样式和脚本，只保留主要的 bundle -->
-  <script src="popup.bundle.js"></script>
+  <button id="analyzeButton">分析当前页面</button>
+  <button id="exportButton">导出数据</button>
+  <div id="result"></div>
+  <script src="popup.js"></script>
 </body>
 </html> 
