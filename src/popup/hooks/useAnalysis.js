@@ -28,6 +28,7 @@ export function useAnalysis() {
         if (!tab.url?.includes("xiaohongshu.com")) {
           throw new Error("请在小红书网页上使用此插件");
         }
+        
 
         // 发送消息获取数据
         const response = await chrome.tabs.sendMessage(tab.id, {
@@ -49,6 +50,7 @@ export function useAnalysis() {
           throw new Error("未找到任何笔记数据，请确保页面已完全加载");
         }
 
+        console.log("Analyzing data:", response.data);
         const analysisResult = analyzeData(response.data);
         setData(analysisResult);
         await saveToStorage("lastAnalysis", analysisResult);

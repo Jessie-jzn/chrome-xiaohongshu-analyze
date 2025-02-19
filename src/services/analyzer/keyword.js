@@ -56,7 +56,7 @@ export function analyzeKeywords(contents) {
 
   contents.forEach((text) => {
     // 使用正则分词（简单实现，实际项目建议使用专业分词库）
-    const words = text.match(/[\u4e00-\u9fa5]{2,}/g) || [];
+    const words = text?.match(/[\u4e00-\u9fa5]{2,}/g) || [];
 
     words
       .filter((w) => !stopWords.has(w))
@@ -71,8 +71,8 @@ export function analyzeKeywords(contents) {
 
 // 计算标题相似度
 export function calculateTitleSimilarity(title1, title2) {
-  const words1 = new Set(title1.match(/[\u4e00-\u9fa5]{2,}/g) || []);
-  const words2 = new Set(title2.match(/[\u4e00-\u9fa5]{2,}/g) || []);
+  const words1 = new Set(title1?.match(/[\u4e00-\u9fa5]{2,}/g) || []);
+  const words2 = new Set(title2?.match(/[\u4e00-\u9fa5]{2,}/g) || []);
 
   const intersection = new Set([...words1].filter((x) => words2.has(x)));
   const union = new Set([...words1, ...words2]);

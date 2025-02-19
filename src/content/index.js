@@ -2,6 +2,7 @@ console.log("Content script loaded");
 
 // 提取页面数据
 function extractData() {
+  console.log("Extracting data...");
   try {
     // 等待页面加载完成
     if (document.readyState !== "complete") {
@@ -15,33 +16,36 @@ function extractData() {
     const posts = Array.from(elements).map((post) => {
       // 标题
       const titleEl = post.querySelector(".title span");
-      console.log("Title element:", titleEl);
+      const title = titleEl ? titleEl.textContent.trim() : "";
 
       // 点赞数
       const likesEl = post.querySelector(".like-wrapper .count");
-      console.log("Likes element:", likesEl);
+      const likes = likesEl
+        ? parseInt(likesEl.textContent.replace(/[^0-9]/g, "") || "0", 10)
+        : 0;
 
       // 作者
       const authorEl = post.querySelector(".author .name");
+      const author = authorEl ? authorEl.textContent.trim() : "";
+
       // 封面图
       const coverEl = post.querySelector(".cover img");
+      const cover = coverEl ? coverEl.src : "";
+
       // 链接
       const linkEl = post.querySelector("a[href^='/explore/']");
+      const link = linkEl ? linkEl.href : "";
+
       // 是否视频（通过图片尺寸判断）
-      const imageStyle = coverEl?.getAttribute("style") || "";
-      const isVideo = imageStyle.includes("object-fit: contain");
+      const isVideo = post.querySelector(".video-container") !== null;
 
       return {
-        title: titleEl?.textContent?.trim() || "",
-        likes: parseInt(
-          likesEl?.textContent?.replace(/[^0-9]/g, "") || "0",
-          10
-        ),
+        title,
+        likes,
         isVideo,
-        author: authorEl?.textContent?.trim() || "",
-        cover: coverEl?.src || "",
-        link: linkEl?.href || "",
-        noteId: linkEl?.href?.split("/")?.pop() || "",
+        author,
+        cover,
+        link,
       };
     });
 

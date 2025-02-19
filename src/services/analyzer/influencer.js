@@ -100,7 +100,7 @@ function analyzeMonetization(data) {
 
 // 辅助函数
 function extractKeywords(text, limit = 5) {
-  const words = text.match(/[\u4e00-\u9fa5]{2,}/g) || [];
+  const words = text?.match(/[\u4e00-\u9fa5]{2,}/g) || [];
   const wordCount = {};
   words.forEach((word) => {
     wordCount[word] = (wordCount[word] || 0) + 1;
