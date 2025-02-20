@@ -24,6 +24,41 @@ const CONFIG = {
   },
 };
 
+// 添加反爬虫配置
+const ANTI_CRAWLER_CONFIG = {
+  // 滚动延迟范围（毫秒）
+  SCROLL_DELAY: {
+    MIN: 1000,
+    MAX: 3000,
+  },
+  // 处理笔记间隔范围（毫秒）
+  NOTE_PROCESS_DELAY: {
+    MIN: 100,
+    MAX: 300,
+  },
+  // 模拟人类滚动行为
+  SCROLL_BEHAVIOR: {
+    // 每次滚动的距离范围（像素）
+    STEP_RANGE: {
+      MIN: 100,
+      MAX: 300,
+    },
+    // 滚动步骤间隔（毫秒）
+    STEP_DELAY: {
+      MIN: 50,
+      MAX: 150,
+    },
+  },
+  // 批次处理配置
+  BATCH: {
+    SIZE: 5, // 每批处理的笔记数
+    DELAY: {
+      MIN: 2000,
+      MAX: 5000,
+    },
+  },
+};
+
 // 错误处理显示函数
 function showError(message, container) {
   container.innerHTML = `
@@ -94,6 +129,19 @@ export async function handleAnalyzeClick() {
   progressContainer.style.display = "block";
   progressBar.style.width = "0%";
 
+  // 添加消息监听器
+  const messageListener = (event) => {
+    if (event.data.type === "UPDATE_PROGRESS") {
+      const progress = event.data.progress;
+      updateProgress(
+        progress,
+        progressBar,
+        document.getElementById("progressText")
+      );
+    }
+  };
+  window.addEventListener("message", messageListener);
+
   try {
     const [tab] = await chrome.tabs.query({
       active: true,
@@ -107,9 +155,40 @@ export async function handleAnalyzeClick() {
     // 注入并执行内容脚本
     const result = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: async function (targetCount, config) {
+      func: async function (targetCount, config, antiCrawlerConfig) {
         return new Promise(async (resolve, reject) => {
           try {
+            // 工具函数
+            function getRandomDelay(min, max) {
+              return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function easeInOutQuad(t) {
+              return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            }
+
+            async function smoothScroll(targetPosition, duration = 1000) {
+              const startPosition = window.pageYOffset;
+              const distance = targetPosition - startPosition;
+              const steps = Math.max(Math.floor(duration / 16), 1);
+
+              for (let i = 1; i <= steps; i++) {
+                const progress = i / steps;
+                const currentPosition =
+                  startPosition + distance * easeInOutQuad(progress);
+                window.scrollTo(0, currentPosition);
+                await new Promise((resolve) => setTimeout(resolve, 16));
+              }
+            }
+
+            // 添加进度更新函数
+            function sendProgressUpdate(progress) {
+              window.postMessage(
+                { type: "UPDATE_PROGRESS", progress: progress },
+                "*"
+              );
+            }
+
             // 等待页面加载完成
             const elements = await new Promise(
               (resolveElements, rejectElements) => {
@@ -134,14 +213,7 @@ export async function handleAnalyzeClick() {
             let lastHeight = 0;
             let noChangeCount = 0;
             let scrollAttempts = 0;
-
-            // 发送进度更新
-            const sendProgress = (progress) => {
-              chrome.runtime.sendMessage({
-                type: "UPDATE_PROGRESS",
-                progress: progress,
-              });
-            };
+            let lastProcessTime = Date.now();
 
             while (
               notes.size < targetCount &&
@@ -152,8 +224,29 @@ export async function handleAnalyzeClick() {
                   config.SELECTORS.NOTE_ITEM
                 );
 
-                noteElements.forEach((element) => {
+                // 批量处理笔记
+                for (let i = 0; i < noteElements.length; i++) {
+                  const element = noteElements[i];
                   if (!element.dataset.processed) {
+                    // 检查处理间隔
+                    const now = Date.now();
+                    const timeSinceLastProcess = now - lastProcessTime;
+                    if (
+                      timeSinceLastProcess <
+                      antiCrawlerConfig.NOTE_PROCESS_DELAY.MIN
+                    ) {
+                      await new Promise((resolve) =>
+                        setTimeout(
+                          resolve,
+                          getRandomDelay(
+                            antiCrawlerConfig.NOTE_PROCESS_DELAY.MIN -
+                              timeSinceLastProcess,
+                            antiCrawlerConfig.NOTE_PROCESS_DELAY.MAX
+                          )
+                        )
+                      );
+                    }
+
                     try {
                       const selectors = config.SELECTORS;
                       const noteData = {
@@ -195,32 +288,59 @@ export async function handleAnalyzeClick() {
                     } catch (error) {
                       console.error("提取笔记数据失败:", error);
                     }
+
                     element.dataset.processed = "true";
+                    lastProcessTime = Date.now();
+
+                    // 每处理一批次后暂停
+                    if (i % antiCrawlerConfig.BATCH.SIZE === 0) {
+                      await new Promise((resolve) =>
+                        setTimeout(
+                          resolve,
+                          getRandomDelay(
+                            antiCrawlerConfig.BATCH.DELAY.MIN,
+                            antiCrawlerConfig.BATCH.DELAY.MAX
+                          )
+                        )
+                      );
+                    }
                   }
-                });
+                }
 
                 // 更新进度
                 const progress = Math.min(
                   Math.round((notes.size / targetCount) * 100),
                   100
                 );
-                sendProgress(progress);
+                sendProgressUpdate(progress);
                 console.log("当前进度:", progress, "%");
 
                 if (notes.size >= targetCount) {
                   break;
                 }
 
+                // 模拟人类滚动行为
                 const currentHeight = document.documentElement.scrollHeight;
-                window.scrollTo({
-                  top: currentHeight,
-                  behavior: "smooth",
-                });
+                const viewportHeight = window.innerHeight;
+                const currentScroll = window.pageYOffset;
+                const targetScroll = Math.min(
+                  currentScroll +
+                    getRandomDelay(
+                      antiCrawlerConfig.SCROLL_BEHAVIOR.STEP_RANGE.MIN,
+                      antiCrawlerConfig.SCROLL_BEHAVIOR.STEP_RANGE.MAX
+                    ),
+                  currentHeight - viewportHeight
+                );
 
-                console.log("滚动到:", currentHeight);
-
+                await smoothScroll(targetScroll);
                 await new Promise((resolve) =>
-                  setTimeout(resolve, config.SCROLL_DELAY)
+                  setTimeout(
+                    resolve,
+                    getRandomDelay(
+                      antiCrawlerConfig.SCROLL_DELAY.MIN,
+                      antiCrawlerConfig.SCROLL_DELAY.MAX
+                    )
+                  )
                 );
 
                 if (currentHeight === lastHeight) {
@@ -237,7 +357,8 @@ export async function handleAnalyzeClick() {
                 scrollAttempts++;
               } catch (error) {
                 console.error("滚动过程出错:", error);
-                await new Promise((resolve) => setTimeout(resolve, 2000));
+                // 出错后增加等待时间
+                await new Promise((resolve) => setTimeout(resolve, 3000));
               }
             }
 
@@ -265,19 +386,7 @@ export async function handleAnalyzeClick() {
           }
         });
       },
-      args: [noteCount, CONFIG],
-    });
-
-    // 监听来自内容脚本的消息
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === "UPDATE_PROGRESS") {
-        const progress = message.progress;
-        updateProgress(
-          progress,
-          progressBar,
-          document.getElementById("progressText")
-        );
-      }
+      args: [noteCount, CONFIG, ANTI_CRAWLER_CONFIG],
     });
 
     // 处理结果
@@ -292,6 +401,8 @@ export async function handleAnalyzeClick() {
   } catch (error) {
     showError(error.message, resultDiv);
   } finally {
+    // 移除消息监听器
+    window.removeEventListener("message", messageListener);
     progressContainer.style.display = "none";
   }
 }
