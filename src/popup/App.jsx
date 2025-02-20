@@ -18,7 +18,6 @@ function App() {
       await analyze(noteCount);
     } catch (err) {
       console.error("Analysis failed:", err);
-      setError(err.message || "分析失败，请确保在小红书页面使用此插件");
     }
   };
 
@@ -30,16 +29,21 @@ function App() {
 
   return (
     <div className="p-4">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
       <div className="input-group mb-4">
         <select
           className="w-full p-2 border rounded"
           value={noteCount}
           onChange={(e) => setNoteCount(Number(e.target.value))}
         >
-          <option value={10}>10篇</option>
-          <option value={20}>20篇</option>
-          <option value={30}>30篇</option>
-          <option value={50}>50篇</option>
+          <option value={20}>分析 20 条笔记</option>
+          <option value={50}>分析 50 条笔记</option>
+          <option value={100}>分析 100 条笔记</option>
         </select>
       </div>
 
@@ -61,11 +65,7 @@ function App() {
 
       {loading && <ProgressBar />}
 
-      {error && (
-        <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">{error}</div>
-      )}
-
-      {data && (
+      {data && !error && (
         <div className="mt-4">
           <div className="tabs flex gap-2 mb-4">
             <TabButton

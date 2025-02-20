@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "webpack --watch --mode=development",
     "build": "webpack --mode=production",
-    "test": "jest",
+    "test": "jest --config jest.config.js",
+    "test:watch": "jest --watch",
     "lint": "eslint src/**/*.{js,jsx}",
-    "format": "prettier --write src/**/*.{js,jsx,css}"
+    "format": "prettier --write src/**/*.{js,jsx,css}",
+    "test:cli": "node -r @babel/register src/test-utils/cli-test.js"
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.7",
@@ -22,7 +24,10 @@
     "@babel/plugin-proposal-decorators": "^7.25.9",
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
     "autoprefixer": "^10.4.20",
+    "babel-jest": "^29.7.0",
     "babel-loader": "^9.2.1",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.11.0",

@@ -1,39 +1,50 @@
 // 计算时间衰减因子
 function calculateTimeDecay(timestamp) {
   const now = Date.now();
-  const age = (now - new Date(timestamp).getTime()) / (24 * 60 * 60 * 1000); // 天数
-  return Math.exp(-age / 30); // 30天半衰期
+  const age = now - (timestamp || now);
+  const dayInMs = 24 * 60 * 60 * 1000;
+  return Math.exp(-age / dayInMs);
 }
 
 // 计算互动率
-function calculateEngagementRate(likes, followers) {
-  return likes / (followers || 1000); // 默认1000粉丝
+function calculateEngagementRate(likes, baseValue) {
+  return (likes || 0) / baseValue;
 }
 
 // 预测爆文潜力
 export function predictHotPosts(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) {
+    return [];
+  }
+
   return posts
     .map((post) => {
-      const engagementRate = calculateEngagementRate(post.likesNum, 1000);
-      const timeDecay = calculateTimeDecay(post.timestamp);
-      const contentBonus = post.isVideo ? 1.2 : 1; // 视频内容加成
-      const titleScore = calculateTitleScore(post.title);
+      try {
+        const engagementRate = calculateEngagementRate(post.likes || 0, 1000);
+        const timeDecay = calculateTimeDecay(post.timestamp || Date.now());
+        const contentBonus = post.isVideo ? 1.2 : 1;
+        const titleScore = calculateTitleScore(post.title);
 
-      const hotScore = engagementRate * timeDecay * contentBonus * titleScore;
+        const hotScore = engagementRate * timeDecay * contentBonus * titleScore;
 
-      return {
-        ...post,
-        hotScore,
-        prediction: {
-          engagementRate,
-          timeDecay,
-          contentBonus,
-          titleScore,
-          potentialScore: Math.round(hotScore * 100),
-        },
-      };
+        return {
+          ...post,
+          score: hotScore,
+          prediction: {
+            engagementRate,
+            timeDecay,
+            contentBonus,
+            titleScore,
+            potentialScore: Math.round(hotScore * 100),
+          },
+        };
+      } catch (error) {
+        console.error("Error processing post:", error);
+        return null;
+      }
     })
-    .sort((a, b) => b.hotScore - a.hotScore);
+    .filter(Boolean) // 移除 null 值
+    .sort((a, b) => b.score - a.score);
 }
 
 // 计算标题得分

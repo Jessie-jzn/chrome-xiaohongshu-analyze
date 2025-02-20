@@ -6,7 +6,7 @@ export function useAnalysis() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { saveToStorage, loadFromStorage } = useStorage();
+  const { saveToStorage } = useStorage();
 
   const analyze = useCallback(
     async (count = 50) => {
@@ -28,7 +28,6 @@ export function useAnalysis() {
         if (!tab.url?.includes("xiaohongshu.com")) {
           throw new Error("请在小红书网页上使用此插件");
         }
-        
 
         // 发送消息获取数据
         const response = await chrome.tabs.sendMessage(tab.id, {
@@ -36,7 +35,7 @@ export function useAnalysis() {
           count,
         });
 
-        if (response.error) {
+        if (response?.error) {
           throw new Error(response.error);
         }
 
@@ -67,5 +66,10 @@ export function useAnalysis() {
     [saveToStorage]
   );
 
-  return { data, loading, error, analyze };
+  return {
+    data,
+    loading,
+    error,
+    analyze,
+  };
 }

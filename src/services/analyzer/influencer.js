@@ -1,15 +1,79 @@
 // 博主360度定位分析模型
 export function analyzeInfluencerPosition(data) {
-  return {
-    contentOutput: analyzeContent(data),
-    roleIdentity: analyzeRole(data),
-    presentationStyle: analyzeStyle(data),
-    personality: analyzePersonality(data),
-    monetization: analyzeMonetization(data),
-    uniquePoints: analyzeUniquePoints(data),
-    benchmark: analyzeBenchmark(data),
-    coreTrack: analyzeCoreTrack(data),
-  };
+  if (!Array.isArray(data) || data.length === 0) {
+    return {
+      type: "unknown",
+      score: 0,
+      recommendations: [],
+    };
+  }
+
+  try {
+    const avgLikes = calculateAvgLikes(data);
+    const contentDiversity = calculateContentDiversity(data);
+    const postFrequency = calculatePostFrequency(data);
+
+    return {
+      type: determineInfluencerType(avgLikes, contentDiversity),
+      score: calculateInfluencerScore(
+        avgLikes,
+        contentDiversity,
+        postFrequency
+      ),
+      recommendations: generateRecommendations(
+        avgLikes,
+        contentDiversity,
+        postFrequency
+      ),
+    };
+  } catch (error) {
+    console.error("Error analyzing influencer position:", error);
+    return {
+      type: "unknown",
+      score: 0,
+      recommendations: [],
+    };
+  }
+}
+
+function calculateAvgLikes(data) {
+  return data.reduce((sum, post) => sum + (post.likes || 0), 0) / data.length;
+}
+
+function calculateContentDiversity(data) {
+  const videoCount = data.filter((post) => post.isVideo).length;
+  return videoCount / data.length;
+}
+
+function calculatePostFrequency(data) {
+  // 简化版本，实际应该基于时间戳计算
+  return data.length;
+}
+
+function determineInfluencerType(avgLikes, contentDiversity) {
+  if (avgLikes > 5000) return "KOL";
+  if (avgLikes > 1000) return "微影响力";
+  return "普通用户";
+}
+
+function calculateInfluencerScore(avgLikes, contentDiversity, postFrequency) {
+  return (avgLikes * 0.5 + contentDiversity * 0.3 + postFrequency * 0.2) / 100;
+}
+
+function generateRecommendations(avgLikes, contentDiversity, postFrequency) {
+  const recommendations = [];
+
+  if (avgLikes < 1000) {
+    recommendations.push("提高内容质量以增加互动");
+  }
+  if (contentDiversity < 0.3) {
+    recommendations.push("尝试更多样化的内容形式");
+  }
+  if (postFrequency < 3) {
+    recommendations.push("增加发布频率");
+  }
+
+  return recommendations;
 }
 
 // 1. 输出内容分析

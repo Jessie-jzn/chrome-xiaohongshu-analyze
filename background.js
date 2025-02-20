@@ -1,5 +1,5 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("小红书AI优化助手已安装");
+  console.log("小红书AI优化助手已安装1");
 });
 
 // 监听文件变化

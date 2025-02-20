@@ -3,11 +3,19 @@
   "name": "小红书笔记分析助手",
   "version": "1.0.0",
   "description": "分析小红书笔记数据，提供点赞、互动等数据分析报告",
-  "permissions": ["activeTab", "scripting", "storage", "downloads"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["*://*.xiaohongshu.com/*"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": ["*://*.xiaohongshu.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
