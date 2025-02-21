@@ -76,6 +76,7 @@ function showError(message, container) {
 
 // 进度显示函数
 function updateProgress(progress, progressBar, progressText) {
+  console.log("progress", progress);
   progressBar.style.width = `${progress}%`;
   progressText.textContent = `进度：${progress}%`;
   const hue = progress * 1.2;
@@ -129,18 +130,18 @@ export async function handleAnalyzeClick() {
   progressContainer.style.display = "block";
   progressBar.style.width = "0%";
 
-  // 添加消息监听器
-  const messageListener = (event) => {
-    if (event.data.type === "UPDATE_PROGRESS") {
-      const progress = event.data.progress;
+  // 修改消息监听器设置
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("收到消息:", message);
+    if (message.type === "UPDATE_PROGRESS") {
+      const progress = message.progress;
       updateProgress(
         progress,
         progressBar,
         document.getElementById("progressText")
       );
     }
-  };
-  window.addEventListener("message", messageListener);
+  });
 
   try {
     const [tab] = await chrome.tabs.query({
@@ -181,12 +182,18 @@ export async function handleAnalyzeClick() {
               }
             }
 
-            // 添加进度更新函数
+            // 修改进度更新函数
             function sendProgressUpdate(progress) {
-              window.postMessage(
-                { type: "UPDATE_PROGRESS", progress: progress },
-                "*"
-              );
+              try {
+                // 使用 chrome.runtime.sendMessage 发送消息
+                chrome.runtime.sendMessage({
+                  type: "UPDATE_PROGRESS",
+                  progress: progress,
+                });
+                console.log("发送进度更新:", progress);
+              } catch (error) {
+                console.error("发送进度更新失败:", error);
+              }
             }
 
             // 等待页面加载完成
@@ -283,7 +290,19 @@ export async function handleAnalyzeClick() {
 
                       if (noteData.title && noteData.author) {
                         notes.add(JSON.stringify(noteData));
-                        console.log("找到笔记:", noteData);
+                        // 每处理一个笔记就更新进度
+                        const progress = Math.min(
+                          Math.round((notes.size / targetCount) * 100),
+                          100
+                        );
+                        sendProgressUpdate(progress);
+                        console.log(
+                          "当前进度:",
+                          progress,
+                          "%",
+                          "笔记数:",
+                          notes.size
+                        );
                       }
                     } catch (error) {
                       console.error("提取笔记数据失败:", error);
@@ -306,14 +325,6 @@ export async function handleAnalyzeClick() {
                     }
                   }
                 }
-
-                // 更新进度
-                const progress = Math.min(
-                  Math.round((notes.size / targetCount) * 100),
-                  100
-                );
-                sendProgressUpdate(progress);
-                console.log("当前进度:", progress, "%");
 
                 if (notes.size >= targetCount) {
                   break;
@@ -357,7 +368,6 @@ export async function handleAnalyzeClick() {
                 scrollAttempts++;
               } catch (error) {
                 console.error("滚动过程出错:", error);
-                // 出错后增加等待时间
                 await new Promise((resolve) => setTimeout(resolve, 3000));
               }
             }
@@ -401,8 +411,6 @@ export async function handleAnalyzeClick() {
   } catch (error) {
     showError(error.message, resultDiv);
   } finally {
-    // 移除消息监听器
-    window.removeEventListener("message", messageListener);
     progressContainer.style.display = "none";
   }
 }
@@ -442,3 +450,21 @@ export function setupAnalyzeButton() {
     analyzeButton.style.backgroundColor = "#ff9999";
   });
 }
+
+// 当文档加载完成时初始化
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await initializeUI();
+    await loadInitialData();
+
+    // 添加按钮事件监听器
+    document
+      .getElementById("analyzeButton")
+      .addEventListener("click", handleAnalyzeClick);
+    document
+      .getElementById("exportButton")
+      .addEventListener("click", handleExportClick);
+  } catch (error) {
+    console.error("初始化失败:", error);
+  }
+});
